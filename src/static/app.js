@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Simple in-memory activities data (replace with API calls as needed)
-  const activities = [
+  // Use `let` so we can update the array after server responses
+  let activities = [
     {
       id: "chess",
       name: "Chess Club",
@@ -55,6 +56,9 @@ document.addEventListener("DOMContentLoaded", () => {
     populateActivitySelect();
 
     form.addEventListener("submit", handleSignup);
+    // Delegate participant remove clicks from the activities list
+    const activitiesListEl = document.querySelector('#activities-list');
+    if (activitiesListEl) activitiesListEl.addEventListener('click', handleParticipantRemove);
   }
 
   function renderActivities() {
@@ -84,19 +88,41 @@ document.addEventListener("DOMContentLoaded", () => {
             <span>Participants</span>
             <span class="participants-count">${(act.participants || []).length}</span>
           </div>
-          ${renderParticipantsHtml(act.participants)}
+          ${renderParticipantsHtml(act.participants, act.id)}
         </div>
       `;
       container.appendChild(card);
     });
   }
 
-  function renderParticipantsHtml(list) {
+  function renderParticipantsHtml(list, activityId) {
     if (!list || list.length === 0) {
       return `<div class="participants-empty">No participants yet — be the first to sign up!</div>`;
     }
-    const items = list.map(p => `<li><span class="participant-chip">${esc(p)}</span></li>`).join("");
+    const items = list.map(p => `
+      <li>
+        <span class="participant-chip">${esc(p)}</span>
+        <button class="participant-remove" type="button" aria-label="Remove ${esc(p)}" data-email="${esc(p)}" data-activity-id="${esc(activityId)}">&times;</button>
+      </li>
+    `).join("");
     return `<ul class="participants-list">${items}</ul>`;
+  }
+
+  // Handle removing participants via event delegation
+  function handleParticipantRemove(e) {
+    const btn = e.target.closest && e.target.closest('.participant-remove');
+    if (!btn) return;
+    const email = btn.getAttribute('data-email');
+    const activityId = btn.getAttribute('data-activity-id') || (btn.closest && btn.closest('.activity-card') && btn.closest('.activity-card').dataset.activityId);
+    if (!activityId || !email) return;
+
+    const act = activities.find(a => a.id === activityId);
+    if (!act) return;
+
+    // remove participant
+    act.participants = (act.participants || []).filter(p => p !== email);
+    updateActivityCard(act);
+    showMessage(`Removed ${email} from ${act.name}`, 'info');
   }
 
   function populateActivitySelect() {
@@ -113,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function handleSignup(e) {
+  async function handleSignup(e) {
     e.preventDefault();
     const email = ($("#email").value || "").trim().toLowerCase();
     const activityId = $("#activity").value;
@@ -144,11 +170,26 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    act.participants = act.participants || [];
-    act.participants.push(email);
-    updateActivityCard(act);
-    $("#signup-form").reset();
-    showMessage("Successfully signed up!", "success");
+    // Call server API to register the participant so server and client stay in sync
+    try {
+      const urlName = encodeURIComponent(act.name);
+      const res = await fetch(`/activities/${urlName}/signup?email=${encodeURIComponent(email)}`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showMessage(data.detail || data.message || 'Failed to sign up', 'error');
+        return;
+      }
+
+      // Update local state and UI to reflect the change immediately
+      act.participants = act.participants || [];
+      if (!act.participants.includes(email)) act.participants.push(email);
+      updateActivityCard(act);
+      $("#signup-form").reset();
+      showMessage("Successfully signed up!", "success");
+    } catch (err) {
+      console.error(err);
+      showMessage('Network error while signing up', 'error');
+    }
   }
 
   function updateActivityCard(act) {
@@ -169,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <span>Participants</span>
           <span class="participants-count">${act.participants.length}</span>
         </div>
-        ${renderParticipantsHtml(act.participants)}
+        ${renderParticipantsHtml(act.participants, act.id)}
       `;
     }
   }
