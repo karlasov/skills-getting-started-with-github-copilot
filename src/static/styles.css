@@ -74,6 +74,104 @@ section h3 {
   margin-bottom: 8px;
 }
 
+/* Participants section styling */
+.participants-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.participants-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.participants-count {
+  background: #e8f0ff;
+  color: #0b3d91;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid #c6d9ff;
+}
+
+.participants-list {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+  display: block;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.participant-chip {
+  display: inline-block;
+  background: #f1f8ff;
+  color: #054a91;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 13px;
+  margin: 4px 6px 0 0;
+  border: 1px solid #d7e9ff;
+}
+
+/* Fallback message when there are no participants */
+.participants-empty {
+  font-size: 13px;
+  color: #666;
+  background: #fbfcfe;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px dashed #eee;
+}
+
+/* Activity meta (schedule + availability) */
+.activity-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #444;
+}
+
+.activity-schedule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1a237e;
+  font-weight: 600;
+}
+
+.availability-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+/* states */
+.availability-open {
+  background: #e8f9ee;
+  color: #117a3a;
+  border-color: #bfe6c8;
+}
+
+.availability-full {
+  background: #fff0f0;
+  color: #b02a37;
+  border-color: #f3b6b6;
+}
+
 .form-group {
   margin-bottom: 15px;
 }
